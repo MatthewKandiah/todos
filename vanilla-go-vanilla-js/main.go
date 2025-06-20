@@ -11,7 +11,7 @@ import (
 func main() {
 	// let's just pretend this is a database!
 	db := make(map[string][]Todo)
-	todo := Todo{description: "Buy milk"}
+	todo := Todo{Description: "Buy milk"}
 	db["bob"] = append(db["bob"], todo)
 
 	r := mux.NewRouter()
@@ -33,6 +33,17 @@ func main() {
 		t.Execute(w, data)
 	}).Methods("GET").Schemes("http")
 
+	r.HandleFunc("/user/{name}/todo", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		name := vars["name"]
+		r.ParseForm()
+		todo := Todo{Description: r.Form["todo"][0]}
+		todos := append(db[name], todo)
+		db[name] = todos
+		redirectUrl := fmt.Sprintf("/user/%s", name)
+		http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
+	}).Methods("POST").Schemes("http")
+
 	r.HandleFunc("/user/login", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		redirectUrl := fmt.Sprintf("/user/%s", r.Form["loginName"][0])
@@ -44,7 +55,7 @@ func main() {
 }
 
 type Todo struct {
-	description string
+	Description string
 }
 
 type UserTodosData struct {
@@ -64,7 +75,14 @@ const loginTemplate = `
 
 const userTodosTemplate = `
 <h1>{{.Name}}</h1>
+<form action="/user/{{.Name}}/todo" method="post">
+	<label for="newTodo"></label>
+	<input type="text" id="newTodo" name="todo"></input>
+	<input type="submit" value="Submit"/>
+</form>
+{{ range .Todos }}
 <ul>
-  <li>{{.Todos}}</li>
+  <li>{{ .Description }}</li>
 </ul>
+{{ end }}
 	`
