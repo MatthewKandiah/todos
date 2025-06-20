@@ -5,15 +5,13 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
 func main() {
 	// let's just pretend this is a database!
 	db := make(map[string][]Todo)
-	todo := Todo{Description: "Buy milk"}
-	db["bob"] = append(db["bob"], todo)
-
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -33,13 +31,30 @@ func main() {
 		t.Execute(w, data)
 	}).Methods("GET").Schemes("http")
 
-	r.HandleFunc("/user/{name}/todo", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/user/{name}/todo/new", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		name := vars["name"]
 		r.ParseForm()
-		todo := Todo{Description: r.Form["todo"][0]}
+		todo := Todo{Id: uuid.NewString(), Description: r.Form["todo"][0]}
 		todos := append(db[name], todo)
 		db[name] = todos
+		redirectUrl := fmt.Sprintf("/user/%s", name)
+		http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
+	}).Methods("POST").Schemes("http")
+
+	r.HandleFunc("/user/{name}/todo/delete", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		name := vars["name"]
+		r.ParseForm()
+		id := r.Form["id"][0]
+		todos := db[name]
+		newTodos := []Todo{}
+		for _, todo := range todos {
+			if todo.Id != id {
+				newTodos = append(newTodos, todo)
+			}
+		}
+		db[name] = newTodos
 		redirectUrl := fmt.Sprintf("/user/%s", name)
 		http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
 	}).Methods("POST").Schemes("http")
@@ -55,6 +70,7 @@ func main() {
 }
 
 type Todo struct {
+	Id          string
 	Description string
 }
 
@@ -75,14 +91,19 @@ const loginTemplate = `
 
 const userTodosTemplate = `
 <h1>{{.Name}}</h1>
-<form action="/user/{{.Name}}/todo" method="post">
+<form action="/user/{{.Name}}/todo/new" method="post">
 	<label for="newTodo"></label>
 	<input type="text" id="newTodo" name="todo"></input>
 	<input type="submit" value="Submit"/>
 </form>
+{{ $n:=.Name }}
 {{ range .Todos }}
 <ul>
-	<li>{{ .Description }}</li>
+	<li>{{ .Description }}
+	<form action="/user/{{$n}}/todo/delete" method="post">
+		<button name="id" value="{{.Id}}">Delete</button>
+	</form>
+	</li>
 </ul>
 {{ end }}
 `
