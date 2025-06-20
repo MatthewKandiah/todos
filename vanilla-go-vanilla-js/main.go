@@ -66,10 +66,10 @@ type UserTodosData struct {
 const loginTemplate = `
 <h1>Login</h1>
 <form action="/user/login" method="post">
-  <label for="loginName"></label>
-  <input type="text" id="loginName" name="loginName"></input>
-  <br/>
-  <input type="submit" value="Submit"/>
+	<label for="loginName"></label>
+	<input type="text" id="loginName" name="loginName"></input>
+	<br/>
+	<input type="submit" value="Submit"/>
 </form>
 	`
 
@@ -82,7 +82,7 @@ const userTodosTemplate = `
 </form>
 {{ range .Todos }}
 <ul>
-  <li>{{ .Description }}</li>
+	<li>{{ .Description }}</li>
 </ul>
 {{ end }}
-	`
+`
