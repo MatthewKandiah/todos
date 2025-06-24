@@ -1,9 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"net/http"
+	"log"
 )
 
 func main() {
-	fmt.Println("Hello, World!")
+	r := InitRouter()
+	log.Fatal(http.ListenAndServe(":1234", r))
 }
