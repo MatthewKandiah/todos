@@ -5,8 +5,6 @@ import (
 	"github.com/gorilla/mux"
 	"html/template"
 	"net/http"
-	"strings"
-	unsafeTemplate "text/template"
 )
 
 type PageTemplateData = struct {
@@ -41,20 +39,11 @@ TODO:
 - fetch user's todos and display them, with options to create, update and delete todos
 */
 func userHandler(w http.ResponseWriter, r *http.Request) {
-	// interesting, if you use a http template here, it escapes the < and > characters on the passed in body argument, so the output in the browser will literally show the characters `<p>contents</p>` instead of just `contents`
-	// using a text/template avoids this and works as expected
-	pageTemplate := unsafeTemplate.Must(unsafeTemplate.ParseFiles("page.html"))
-	testTemplate := template.Must(template.ParseFiles("test.html"))
-
+	t := template.Must(template.ParseFiles("page.html", "test.html"))
 	vars := mux.Vars(r)
 	testData := TestTemplateData{
 		Name: vars["userId"],
 	}
-	var sb strings.Builder
-	testTemplate.Execute(&sb, testData)
-	pageData := PageTemplateData{
-		Body: sb.String(),
-	}
-	pageTemplate.Execute(w, pageData)
-	fmt.Fprintf(w, "<p>What about this one?</p>")
+	t.Execute(w, testData)
+	fmt.Fprintf(w, "<p>Expecting: Hello %s</p>", testData.Name)
 }
