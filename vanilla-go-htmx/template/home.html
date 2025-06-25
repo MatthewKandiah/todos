@@ -1,0 +1,9 @@
+{{define "content"}}
+<h1>Go-HTMX-TODO</h1>
+<p>TODO - sign in</p>
+<form action="/register">
+  <label for="register">Register</label>
+  <input id="register" name="userName"/>
+  <button hx-put="/register" hx-target="body">Submit</button>
+</form>
+{{end}}
